@@ -1,0 +1,31 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+	  {
+		"label": "build",
+		"isBackground": true,
+		"group": {
+		  "kind": "build",
+		  "isDefault": true
+		},
+		"dependsOn": [ "serve"]
+	  },
+	  {
+		"label": "serve",
+		"type": "npm",
+		"script": "dev",
+		"isBackground": true,
+		"problemMatcher": [
+		  {
+			"base": "$tsc-watch",
+			"background": {
+			  "activeOnStart": true,
+			  "beginsPattern": "dev server running at",
+			  "endsPattern": "ready in"
+			}
+		  }
+		],
+		"group": "build"
+	  },
+	]
+  }
