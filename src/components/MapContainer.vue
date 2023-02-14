@@ -1,16 +1,27 @@
 <script setup lang="ts">
-import { paths, names, coords, europe } from "@/mapdata";
+import { paths, names, coords, continentFilter } from "@/mapdata";
 import type { Group, Piece } from "@/models";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, toRefs } from "vue";
 import { hex } from "@/helpers";
 import { colorMerge, rndcolor } from "@/colorMerge";
 
+const props = defineProps<{
+  continents: string[];
+  sizeFilter: number;
+  scale: number;
+}>();
+
+const { scale } = toRefs(props);
 const groups = ref<Group[]>([]);
 
 onMounted(() => {
   let ix = 1;
   groups.value = Object.keys(paths)
-    .filter((p) => europe.includes(p))
+    .filter(
+      (p) =>
+        props.continents.length === 0 ||
+        props.continents.includes(continentFilter[p])
+    )
     .map((c) => {
       const coord = coords[c];
       return {
@@ -45,13 +56,21 @@ const merge = (main: Group, inc: Group) => {
   colorMerge(main.pieces, 0.5);
 };
 
-const getGroup = (code: string | undefined) => {
-  return groups.value.filter((g) => g.id === code)[0];
-};
-
 const dragstart = (e: MouseEvent) => {
-  const g = getGroup((e.currentTarget as any).id);
-  g.dragging = true;
+  const code = (e.currentTarget as any).id as string;
+  const ix = groups.value.findIndex((u) => u.id === code);
+  if (ix === -1) {
+    throw "Bad index";
+  }
+  if (ix > 0) {
+    // move ix to top of group
+    // this makes everything else paint over the drag -> easier to see
+    const tmp = groups.value[0];
+    groups.value[0] = groups.value[ix];
+    groups.value[ix] = tmp;
+  }
+
+  groups.value[0].dragging = true;
 };
 const dragend = () => {
   const typedGroupList = groups.value as Group[]; // typescript got confused about the typing, cast to force no errors
@@ -84,8 +103,9 @@ const drag = (e: MouseEvent) => {
 <template>
   <div>
     <svg
-      width="2000"
-      height="2000"
+      :width="2000 * scale"
+      :height="2000 * scale"
+      view-box="0 0 5000 5000"
       xmlns="http://www.w3.org/2000/svg"
       @mouseup="dragend"
       @mousemove="drag"
@@ -95,7 +115,7 @@ const drag = (e: MouseEvent) => {
         :key="g.id"
         :id="g.id"
         @mousedown="dragstart"
-        :transform="`translate(${g.offX},${g.offY})`"
+        :transform="`translate(${g.offX},${g.offY}) scale(${scale})`"
       >
         <g v-for="p in g.pieces" :key="p.id">
           <path
