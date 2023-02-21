@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import MapContainer from "./components/MapContainer.vue";
+import AllPaths from "./components/AllPaths.vue";
 import { arraySame } from "./helpers";
 const urlParams = new URLSearchParams(window.location.search);
 
@@ -24,6 +25,9 @@ const go = () => {
   window.location.search = `?scale=${scale.value}&size=${sizeSelection.value}&${cc}`;
 };
 
+const largest = ref(0);
+const total = ref(0);
+
 const cango = computed(() => {
   return (
     minSize !== sizeSelection.value ||
@@ -38,6 +42,10 @@ const cChange = () => {
   if (continentSelection.value.length == 0) {
     continentSelection.value = validContinents.slice(0);
   }
+};
+const updateLargest = (l: number, t: number) => {
+  largest.value = l;
+  total.value = t;
 };
 </script>
 
@@ -63,19 +71,25 @@ const cChange = () => {
     <hr />
     <label>
       Scale
-      <input type="range" min="1" max="4" step="0.1" v-model="scale" />
+      <input type="range" min="1" max="3" step="0.01" v-model="scale" />
     </label>
+    Largest group: {{ largest }} / {{ total }}
   </header>
   <main>
     <MapContainer
       :continents="filteredContinents"
       :sizeFilter="minSize"
       :scale="scale"
+      :onLargestGroup="updateLargest"
     />
+    <!-- <AllPaths /> -->
   </main>
 </template>
 
 <style scoped>
+input[type="range"] {
+  width: 70vw;
+}
 hr {
   margin: 2em;
 }

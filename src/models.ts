@@ -9,6 +9,7 @@ export type Piece = {
   color: Color;
   name: string;
   coord: Coord;
+  shade?: string;
 };
 
 export type Group = {
